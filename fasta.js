@@ -1,4 +1,4 @@
-//'use strict';
+'use strict';
 //console.log(process.argv[2]);
 
 const fs = require('fs');
@@ -17,43 +17,44 @@ let lines = fs.readFileSync(ifile).toString().split(">");
 //console.log(lines[1]);
 //console.log(lines.length);
 
-let seqLength = [];
-let seqLengthObject = {};
+let seqObj = [];
+let seqObjObject = {};
 //let totalLength = 0;
 for(let i=1; i<lines.length; i++){
   //console.log(lines[i]);
   let id = lines[i].split("\n")[0].split(/\s+/)[0];
   //console.log(id);
-  let seq = lines[i].split("\n").slice(1).join('');
+  let seqOriginal = lines[i].split("\n").slice(1).join('');
+  let seq = seqOriginal.replace(/\s+/g, '').toUpperCase().replace(/[^A|T|C|G]/g, 'N');
   //console.log(id + "\t" + seq.length);
   //totalLength += seq.length;
-  seqLength.push([id, seq, seq.length]);
+  seqObj.push([id, seq, seq.length]);
 
-  //seqLengthObject[id] = seq.length;
-  //seqLengthObject[id] = seq.length;
-  //seqLengthObject = [{key: id, val: seq.length}];
+  //seqObjObject[id] = seq.length;
+  //seqObjObject[id] = seq.length;
+  //seqObjObject = [{key: id, val: seq.length}];
 }
 
-seqLength.sort(function(a, b){
+seqObj.sort(function(a, b){
   return b[2] - a[2];
 });
-//console.log(seqLength);
-//console.log(seqLength[2]);
-//console.log(seqLength.length);
+//console.log(seqObj);
+//console.log(seqObj[2]);
+//console.log(seqObj.length);
 
-for(let i=0; i<seqLength.length; i++){
-  //console.log(">" + seqLength[i][0] + "\t" + seqLength[i][1] + "\n" + seqLength[i][2]);
+for(let i=0; i<seqObj.length; i++){
+  //console.log(">" + seqObj[i][0] + "\t" + seqObj[i][1] + "\n" + seqObj[i][2]);
 
-  process.stdout.write(fasta_print(seqLength[i][0], seqLength[i][1]));
+  process.stdout.write(fasta_print(seqObj[i][0], seqObj[i][1]));
 
   if (complementRerverse){
-    let complementSequence = complement_seq(seqLength[i][1])
-    process.stdout.write(fasta_print(seqLength[i][0] + '_complement', complementSequence));
+    let complementSequence = complement_seq(seqObj[i][1])
+    process.stdout.write(fasta_print(seqObj[i][0] + '_complement', complementSequence));
   }
 }
 
 function complement_seq(seq){
-  function complement (base){
+  function complement(base){
     return {A : 'T', T: 'A', G: 'C', C: 'G' }[base];
   }
 
@@ -61,8 +62,7 @@ function complement_seq(seq){
   return compSeq;
 }
 
-
-function fasta_print(id, seq, lineLen){
+function fasta_print(id, seq){
   let output = ">" + id + "\n";
 
   for (let i=0; i<seq.length; i +=iLineLength){
