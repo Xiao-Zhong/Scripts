@@ -31,6 +31,7 @@ the first seqeunce.
   --file_in_dir <num>     the max file number in each directory, default is no limited
   --outdir <str>          set the result dir, only used for cuts and cutf, default=./
 
+  --get_id <str>          get one sequence by specified ID
   --pattern <str>         get out sequence which can match the specifed word
   --unpattern <str>       get out sequence which do not match the specifed word
 
@@ -70,7 +71,7 @@ use Getopt::Long;
 use Data::Dumper;
 use File::Path;  ## function " mkpath" and "rmtree" deal with directory
 
-my ($Attribute,$Cuts,$Cutf,$File_in_dir_num,$Pattern,$Unpattern,$Sample);
+my ($Attribute,$Cuts,$Cutf,$File_in_dir_num,$Pattern,$Unpattern,$Sample,$Get_id);
 my ($Substruct,$Reverse,$Complement,$Reform,$Outdir);
 my ($Verbose,$Help);
 GetOptions(
@@ -79,6 +80,7 @@ GetOptions(
 	"cutf:n"=>\$Cutf,
 	"outdir:s"=>\$Outdir,
 	"file_in_dir:n"=>\$File_in_dir_num,
+	"get_id:s"=>\$Get_id,
 	"pattern:s"=>\$Pattern,
 	"unpattern:s"=>\$Unpattern,
 	"sample:s"=>\$Sample,
@@ -99,7 +101,7 @@ cut_fasta($ARGV[0],$File_in_dir_num) if($Cuts);
 
 cut_fasta_advanced($ARGV[0]) if($Cutf); ##only one rank directory
 
-pattern_head() if($Pattern || $Unpattern);
+pattern_head() if($Pattern || $Unpattern || $Get_id);
 
 sample_seq() if($Sample);
 
@@ -264,6 +266,14 @@ sub pattern_head{
 				print ">".$title."\n".$seq."\n"  if($title!~/$pat$/);
 			}else{
 				print ">".$title."\n".$seq."\n"  if($title!~/$pat/);
+			}
+		}
+
+		if ($Get_id) {
+			my $seq_id = $1 if($title =~ /^(\S+)/);
+			if ($Get_id eq $seq_id) {
+				print ">".$title."\n".$seq."\n";
+				last;
 			}
 		}
 	}

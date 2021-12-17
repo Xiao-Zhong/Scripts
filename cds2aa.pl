@@ -197,7 +197,6 @@ sub check_CDS{
 	for (my $i=3; $i<$len-3; $i+=3) {
 		my $codon=substr($seq,$i,3);
 		$mid=0 if($codon eq 'TGA' || $codon eq 'TAG' || $codon eq 'TAA');
-		#print $i."\n" if($codon eq 'TGA' || $codon eq 'TAG' || $codon eq 'TAA');	
 	}
 
 

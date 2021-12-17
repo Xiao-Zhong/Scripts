@@ -1,12 +1,13 @@
 #!/usr/bin/perl
 use Getopt::Long;
+use warnings;
 
-GetOptions (\%opt,"gb:s","project:s","help");
+GetOptions (\%opt,"embl:s","project:s","help");
 
 
 my $help=<<USAGE;
-Genbank to gff
-perl $0 --gb test.gb --project moc1
+EMBL to gff
+perl $0 --embl test.embl --project moc1
 
 USAGE
 
@@ -22,7 +23,7 @@ my $record;
 my $dna;
 my $annotation;
 my $offset;
-my $library = $opt{gb};
+my $library = $opt{embl};
  
 # Perform some standard subroutines for test
 $fh = open_file($library);
@@ -51,7 +52,7 @@ sub writegff
 my ($anno,$dna)=@_;
 my $count=0;
 open OUT, ">$opt{project}.gff" or die "$!";
-while($anno=~/     CDS             (.*?)[\)\/]/gs){
+while($anno=~/FT   CDS             (.*?)[\)\/]/gs){
    my $pos=$1;
    my $strand="+";
    $count++;
@@ -65,16 +66,16 @@ while($anno=~/     CDS             (.*?)[\)\/]/gs){
    foreach my $e (@exon){
       my @unit;
       if ($e=~/(\d+)\.\.(\d+)/){
-         @unit[0]=$1;
-         @unit[1]=$2;
+         $unit[0]=$1;
+         $unit[1]=$2;
       } 
       push (@exonp,[$unit[0],$unit[1]]);
    }
    my $mrnas=$exonp[0][0];
    my $mrnae=$exonp[$#exonp][1];
-   print OUT "$opt{project}\tGenbank\tmRNA\t$mrnas\t$mrnae\t\.\t$strand\t\.\tID=$name;\n";
+   print OUT "$opt{project}\tEMBL\tmRNA\t$mrnas\t$mrnae\t\.\t$strand\t\.\tID=$name;\n";
    foreach my $ep (@exonp){
-      print OUT "$opt{project}\tGenbank\tCDS\t$ep->[0]\t$ep->[1]\t\.\t$strand\t\.\tParent=$name;\n";
+      print OUT "$opt{project}\tEMBL\tCDS\t$ep->[0]\t$ep->[1]\t\.\t$strand\t\.\tParent=$name;\n";
    }
    print "$strand\t$pos\n";
 }
@@ -130,13 +131,13 @@ sub get_annotation_and_dna {
     my($dna) = '';
  
     # Now separate the annotation from the sequence data
-    ($annotation, $dna) = ($record =~ /^(LOCUS.*ORIGIN\s*\n)(.*)\/\/\n/s);
- 
+    #($annotation, $dna) = ($record =~ /^(LOCUS.*ORIGIN\s*\n)(.*)\/\/\n/s);
+    ($annotation, $dna) = ($record =~ /^(FH\s+Key.*SQ\s+Sequence.*?BP;\s*\n)(.*)\/\/\n/s); 
     # clean the sequence of any whitespace or / characters 
     #  (the / has to be written \/ in the character class, because
     #   / is a metacharacter, so it must be "escaped" with \)
     $dna =~ s/[\s\/\d]//g;
-    $dna =~ tr/atgc/ATGC/; 
+     
     return($annotation, $dna)
 }
  
