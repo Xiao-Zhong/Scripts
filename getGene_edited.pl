@@ -6,12 +6,12 @@ getGene.pl  --  get gene elements from sequences according to coordinates
 
 =head1 Description
 
-This program is used to get out the gene elements, such as exon, intron, mrna, gene, splicing site, 
+This program is used to get out the gene elements, such as exon, intron, mrna, gene, splicing site,
 5'-flanking, 3'-flanking. Both cds and gene can be used in combination with 5'-flanking and 3'-flanking.
 
 The position file can be psl or gff format now. The genome sequence file must
 be fasta format. Note that this program is originally designed for CDS region, in other words,
-not consider the UTR regions. You should alter on this, in order not to make mistake. 
+not consider the UTR regions. You should alter on this, in order not to make mistake.
 For psl format, it only considers about blocks. For gff format, it only recognize mRNA and CDS feature.
 The program will detect the file format automatically, or you can set by "--posformat" manually.
 
@@ -29,12 +29,12 @@ UTR region.
   --type <str>        specify element type: exon,intron,mrna,gene,splice,flank5,flank3, default=mrna
   --flank3 <num>      specify 3'-flanking length, co-used with gene/mrna
   --flank5 <num>      specify 5'-flanking length, co-used with gene/mrna
-  --verbose           output verbose information to screen  
-  --help              output help information to screen  
+  --verbose           output verbose information to screen
+  --help              output help information to screen
 
 =head1 Exmple
 
- perl ./getGene.pl chr01.psl chr01.fa 
+ perl ./getGene.pl chr01.psl chr01.fa
  perl ./getGene.pl chr01.gff chr01.fa -type splice
  perl ./getGene.pl chr01.psl chr01.fa -type intron
  perl ./getGene.pl chr01.psl chr01.fa -type exon
@@ -46,7 +46,7 @@ UTR region.
 use strict;
 use Getopt::Long;
 use FindBin qw($Bin $Script);
-use File::Basename qw(basename dirname); 
+use File::Basename qw(basename dirname);
 use Data::Dumper;
 
 my ($Posformat,$Type,$Flank5,$Flank3);
@@ -72,7 +72,7 @@ read_gff($pos_file,\%gene) if($Posformat eq 'gff' || $pos_file =~ /.gff$/);
 
 open(IN,$seq_file)||die("failed $seq_file\n");
 
-$/=">"; <IN>; $/="\n";	
+$/=">"; <IN>; $/="\n";
 while (<IN>) {
 	my $output;
 	my $chr=$1 if(/^(\S+)/);
@@ -88,7 +88,7 @@ while (<IN>) {
 		my $strand=$$chr_pp{$gene}{strand};
 		next if(!exists $chr_pp->{$gene}{exon});
 		my @exon = @{$chr_pp->{$gene}{exon}};
-		
+
 		if ($Type eq 'flank5') {
 			my ($left_leng, $right_leng,$flank_str);
 			if ($strand eq '+') {
@@ -118,13 +118,13 @@ while (<IN>) {
 				$right_leng = $Flank3 if ($strand eq '+' && $Flank3 );
 				$right_leng = $seq_len - $exon[-1][1] if($right_leng > $seq_len - $exon[-1][1]);
 				$flank_str = substr($seq,$exon[-1][1],$right_leng) if($right_leng);
-				
+
 			}
 			Display_seq(\$flank_str);
 			$output .= ">".$gene."   [flank3:$Flank3]\n".$flank_str;
 		}
 
-		
+
 		if ($Type eq "exon") {
 			my $mark;
 			for (my $i=0; $i<@exon; $i++) {
@@ -150,7 +150,7 @@ while (<IN>) {
 
 			$mrna .= substr($seq,$exon[0][0]-$left_leng-1,$left_leng) if($left_leng);
 			for (my $i=0; $i<@exon; $i++) {
-				$mrna .= substr($seq,$exon[$i][0]-1, $exon[$i][1] - $exon[$i][0] + 1);	
+				$mrna .= substr($seq,$exon[$i][0]-1, $exon[$i][1] - $exon[$i][0] + 1);
 			}
 			$mrna .= substr($seq,$exon[-1][1],$right_leng) if($right_leng);
 
@@ -174,13 +174,13 @@ while (<IN>) {
 			$geneseq .= substr($seq,$exon[0][0]-$left_leng-1,$left_leng) if($left_leng);
 			$geneseq .= substr($seq,$exon[0][0] - 1, $exon[-1][1] - $exon[0][0] + 1);
 			$geneseq .= substr($seq,$exon[-1][1],$right_leng) if($right_leng);
-			
+
 			$geneseq = Complement_Reverse($geneseq) if($strand eq '-');
 			Display_seq(\$geneseq);
 			my $mark = "$gene  [gene]";
 			$output .= ">".$mark."\n".$geneseq;
 		}
-		
+
 		if ($Type eq "intron") {
 			my $mark;
 			for (my $i=0; $i<@exon-1; $i++) {
@@ -199,15 +199,15 @@ while (<IN>) {
 				my $intron = substr($seq,$exon[$i][1], $exon[$i+1][0]-$exon[$i][1]-1);
 				$intron = Complement_Reverse($intron) if($strand eq '-');
 				$mark = $gene."_I".($i+1) if($strand eq '+');
-				$mark = $gene."_I".(scalar(@exon)-1-$i) if($strand eq '-');	
+				$mark = $gene."_I".(scalar(@exon)-1-$i) if($strand eq '-');
 				my $splice = substr($intron,0,2)."/".substr($intron,length($intron)-2,2);
 				$output .= $gene."\t".$mark."\t".$splice."\n";
 			}
 		}
 
-		
-		
-		
+
+
+
 	}
 	print $output;
 }
@@ -286,7 +286,7 @@ sub read_gff{
 		my @t = split(/\t/);
 
 		#edited for gene-exon format gff
-		next if ($t[8]=~/=rRNA_|=tRNA_|=rrn|=trn/);
+		next if ($t[8]=~/=rRNA_|=tRNA_|=rrn|=trn/); #edited!
 		$t[2]=~s/gene/mRNA/g;
 		$t[2]=~s/exon/CDS/g;
 
@@ -302,7 +302,7 @@ sub read_gff{
 			$qname = $1 if($t[8] =~ /Target\s+\"(\S+)\"/);
 		}
 
-		
+
 		if ($t[2] eq 'mRNA' || $t[2] eq 'match') {
 			$ref->{$tname}{$qname}{strand} = $t[6];
 		}
@@ -313,7 +313,7 @@ sub read_gff{
 	close(IN);
 
 	##print Dumper $ref;
-	
+
 	##change the exon order
 	foreach my $chr (keys %$ref) {
 		my $chr_p = $ref->{$chr};
